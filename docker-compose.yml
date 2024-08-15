@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.0.11-alpine
+    ports:
+      - "6379:6379"
+    container_name: redis
+    restart: always
+    networks:
+      - main
+
+  django:
+    image: achareh-interview
+    container_name: django
+    build:
+      context: ./code
+      dockerfile: Dockerfile
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./code:/code/
+    ports:
+      - "8000:8000"
+    environment:
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - DEBUG=True
+      - SECRET_KEY=sdlkfhsdlfhslhdslkdjfsldejfdsl@sldfhglsdfhg
+    restart: always
+    networks:
+      - main
+    depends_on:
+      - redis
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    networks:
+      - main
+
+  celery:
+    container_name: celery
+    build:
+      context: ./code
+      dockerfile: Dockerfile
+    command: celery --app=config.celery_base worker -l INFO -Q tasks
+    volumes:
+      - ./code:/code/
+    environment:
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DEBUG=True
+      - SECRET_KEY=sdlkfhsdlfhslhdslkdjfsldejfdsl@sldfhglsdfhg
+    restart: always
+    depends_on:
+      - redis
+      - django
+      - rabbitmq
+    networks:
+      - main
+
+networks:
+  main:
+    name: main
+

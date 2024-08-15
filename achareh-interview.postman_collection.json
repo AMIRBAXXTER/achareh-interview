@@ -1,0 +1,194 @@
+{
+	"info": {
+		"_postman_id": "022fd7a6-446f-4310-8d0a-91c633d38610",
+		"name": "achareh-interview",
+		"description": "اگر کاربر در مرحله وارد کردن otp و یا رمز عبور در یک بازه ی زمانی مشخص(5 دقیقه) سه بار اشتباه کند بنا بر شرایط ip و یا خود کاربر به مدت یک ساعت مسدود میشود.\n\nاگر اشتباه وارد کردن در بازه بیشتری باشد مثلا دو بار در ساعت 10 و یک بار در ساعت 11 اتفاق بیوفتد کاربر مسدود نمیشود.\n\nرفع مسدود سازی با استفاده از یک task پیاده سازی شده است.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33093933"
+	},
+	"item": [
+		{
+			"name": "login request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "phone_number",
+							"value": "09377966936",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://0.0.0.0:8000/login-request/",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"login-request",
+						""
+					]
+				},
+				"description": "شماره تلفن کاربر به این url فرستاده میشود.اگر کاربری با این شماره تماس وجود داشته باشد ادامه فرآیند لاگین در login verify اتفاق میوفتد و اگر کاربری با این شماره تماس وجود نداشته باشد یک opt ساخته میشود که در این جا به عنوان response نمایش داده میشود. این otp در register otp check بررسی میشود و اگر otp درست وارد شده باشد ادامه فرآیند ثبت نام در register verify اتفاق میوفتد."
+			},
+			"response": []
+		},
+		{
+			"name": "register otp check",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "phone_number",
+							"value": "09377966936",
+							"type": "text"
+						},
+						{
+							"key": "code",
+							"value": "123456",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://0.0.0.0:8000/register-otp-check/",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"register-otp-check",
+						""
+					]
+				},
+				"description": "شماره تماس و otp گرفته میشود در صورت صحیح بودن پیغام مربوطه نمایش داده میشود."
+			},
+			"response": []
+		},
+		{
+			"name": "register verify",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "phone_number",
+							"value": "09377966936",
+							"type": "text"
+						},
+						{
+							"key": "first_name",
+							"value": "amir",
+							"type": "text"
+						},
+						{
+							"key": "last_name",
+							"value": "baxxter",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "AbCd@1234",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://0.0.0.0:8000/register-verify/",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"register-verify",
+						""
+					]
+				},
+				"description": "در صورتی که کاربر otp را صحیح وارد کرده باشد در این مرحله سایر اطلاعات مورد نیاز برای ثبت نام گرفته میشود و کاربر ایجاد میشود."
+			},
+			"response": []
+		},
+		{
+			"name": "login verify",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "phone_number",
+							"value": "09377966936",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "AbCd@1234",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://0.0.0.0:8000/login-verify/",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"login-verify",
+						""
+					]
+				},
+				"description": "شماره تماس و رمز عبور کاربر گزفته میشود و اگر صحیح وارد شده باشد توکن احراز هویت به عنوان response نمایش داده میشود."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
