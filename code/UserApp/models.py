@@ -4,6 +4,8 @@ from django.db import models
 from django.utils import timezone
 import random
 
+from .mixins import GetOrNoneMixin
+
 
 # Create your models here.
 
@@ -24,7 +26,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-class CustomUser(AbstractBaseUser, PermissionsMixin):
+class CustomUser(AbstractBaseUser, PermissionsMixin, GetOrNoneMixin):
     phone_number = models.CharField(max_length=11, unique=True, verbose_name='شماره تماس')
     first_name = models.CharField(max_length=255, verbose_name='نام')
     last_name = models.CharField(max_length=255, verbose_name='نام خانوادگی')
@@ -40,7 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
 
-class OTP(models.Model):
+class OTP(models.Model, GetOrNoneMixin):
     phone_number = models.CharField(max_length=11,null=True, verbose_name='شماره تماس')
     otp = models.CharField(max_length=6, null=True, blank=True, verbose_name='کد تایید')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -49,7 +51,7 @@ class OTP(models.Model):
         return self.phone_number
 
     def save(self, *args, **kwargs):
-        old_otp = OTP.objects.filter(phone_number=self.phone_number)
+        old_otp = OTP.get_or_none(phone_number=self.phone_number)
         if old_otp:
             old_otp.delete()
         self.otp = str(random.randint(100000, 999999))
@@ -65,5 +67,5 @@ class FailedLoginTry(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, verbose_name='زمان تلاش برای ورود')
 
 
-class BlockedIPs(models.Model):
+class BlockedIPs(models.Model, GetOrNoneMixin):
     ip = models.GenericIPAddressField(null=True, blank=True, verbose_name='آی پی')

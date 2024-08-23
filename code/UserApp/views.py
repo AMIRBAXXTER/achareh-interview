@@ -12,36 +12,29 @@ from .models import CustomUser, OTP, BlockedIPs
 class LoginRequest(APIView):
     def post(self, request):
 
-        user = CustomUser.objects.filter(phone_number=request.data.get('phone_number')).first()
-        if user and not user.is_active:
-            return Response({'message': 'User is blocked'}, status=status.HTTP_403_FORBIDDEN)
-
-        is_blocked = BlockedIPs.objects.filter(ip=request.META.get('REMOTE_ADDR')).exists()
-        if is_blocked:
-            return Response({'message': 'IP is blocked'}, status=status.HTTP_400_BAD_REQUEST)
+        response = check_block_status(request)
+        if response:
+            return response
 
         serializer = LoginRequestSerializer(data=request.data)
         if serializer.is_valid():
-            user = CustomUser.objects.filter(phone_number=serializer.data.get('phone_number')).first()
+            sv = serializer.validated_data
+            user = CustomUser.get_or_none(phone_number=sv['phone_number'])
             if user:
                 return Response({'message': 'User exists and can login'}, status=status.HTTP_200_OK)
-            new_otp = OTP.objects.create(phone_number=serializer.validated_data.get('phone_number'))
-            return Response({'your OTP': new_otp.otp}, status=status.HTTP_200_OK)
+            new_otp = OTP.objects.create(phone_number=sv['phone_number'])
+            send_sms(phone_number=new_otp.phone_number, message='Your OTP is: ' + new_otp.otp)
+            return Response({'message': 'otp sent to user'}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class LoginVerify(APIView):
     def post(self, request):
-        phone_number = request.data.get('phone_number')
-        user = CustomUser.objects.filter(phone_number=phone_number).first()
-        if user and not user.is_active:
-            return Response({'message': 'User is blocked'}, status=status.HTTP_403_FORBIDDEN)
 
-        is_blocked = BlockedIPs.objects.filter(ip=request.META.get('REMOTE_ADDR')).exists()
-        if is_blocked:
-            return Response({'message': 'IP is blocked'}, status=status.HTTP_400_BAD_REQUEST)
+        response = check_block_status(request)
+        if response:
+            return response
 
         serializer = LoginVerifySerializer(data=request.data)
         if serializer.is_valid():
@@ -60,15 +53,16 @@ class LoginVerify(APIView):
 class RegisterOTPCheck(APIView):
     def post(self, request):
 
-        is_blocked = BlockedIPs.objects.filter(ip=request.META.get('REMOTE_ADDR')).exists()
-        if is_blocked:
-            return Response({'message': 'IP is blocked'}, status=status.HTTP_400_BAD_REQUEST)
+        response = check_block_status(request, is_registered=False)
+        if response:
+            return response
 
         serializer = RegisterOTPCheckSerializer(data=request.data)
         if serializer.is_valid():
-            otp = OTP.objects.filter(phone_number=serializer.data.get('phone_number')).first()
+            sv = serializer.validated_data
+            otp = OTP.get_or_none(phone_number=sv['phone_number'])
             if otp:
-                if otp.otp == serializer.data.get('code') and otp.is_valid:
+                if otp.otp == sv['code'] and otp.is_valid:
                     otp.delete()
                     return Response({'message': 'OTP verified'}, status=status.HTTP_200_OK)
 
@@ -80,9 +74,9 @@ class RegisterOTPCheck(APIView):
 class RegisterVerify(APIView):
     def post(self, request):
 
-        is_blocked = BlockedIPs.objects.filter(ip=request.META.get('REMOTE_ADDR')).exists()
-        if is_blocked:
-            return Response({'message': 'IP is blocked'}, status=status.HTTP_400_BAD_REQUEST)
+        response = check_block_status(request, is_registered=False)
+        if response:
+            return response
 
         serializer = RegisterVerifySerializer(data=request.data)
         if serializer.is_valid():

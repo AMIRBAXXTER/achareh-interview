@@ -18,7 +18,7 @@ class FailedLoginMiddleware:
             password = request.POST.get('password')
             user = authenticate(request, phone_number=phone_number, password=password)
             if user is None:
-                user = CustomUser.objects.filter(phone_number=phone_number).first()
+                user = CustomUser.get_or_none(phone_number=phone_number)
                 ip = request.META.get('REMOTE_ADDR')
                 if user:
 
@@ -42,7 +42,7 @@ class FailedLoginMiddleware:
                             minutes=5)).count() >= 4:
                         BlockedIPs.objects.create(ip=ip)
                         all_tries_count_by_ip.delete()
-                        unblock_ip.apply_async(args=[ip], countdown=60)
+                        unblock_ip.apply_async(args=[ip], countdown=3600)
 
         response = self.get_response(request)
 
@@ -59,9 +59,9 @@ class FailedRegisterMiddleware:
             phone_number = request.POST.get('phone_number')
             ip = request.META.get('REMOTE_ADDR')
             otp = request.POST.get('code')
-            is_blocked = BlockedIPs.objects.filter(ip=ip).exists()
+            is_blocked = BlockedIPs.get_or_none(ip=ip)
             if not is_blocked:
-                registered_otp = OTP.objects.filter(phone_number=phone_number).first()
+                registered_otp = OTP.get_or_none(phone_number=phone_number)
                 if registered_otp is not None:
                     if registered_otp.otp != otp:
 
@@ -72,7 +72,7 @@ class FailedRegisterMiddleware:
                             BlockedIPs.objects.create(ip=ip)
                             all_tries_count_by_ip.delete()
                             registered_otp.delete()
-                            unblock_ip.apply_async(args=[ip], countdown=60)
+                            unblock_ip.apply_async(args=[ip], countdown=3600)
 
         response = self.get_response(request)
 
